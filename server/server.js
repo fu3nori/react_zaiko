@@ -83,6 +83,28 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
+// 商品マスター登録
+// server.js
+app.post('/api/items', async (req, res) => {
+    const { user_id, name, quantity } = req.body;
+
+    if (!user_id || !name) {
+        return res.status(400).json({ message: '必要な情報が不足しています' });
+    }
+
+    try {
+        await db.query('INSERT INTO items (user_id, name, quantity) VALUES (?, ?, ?)', [
+            user_id, name, quantity || 0,
+        ]);
+        res.status(201).json({ message: '商品登録に成功しました' });
+    } catch (err) {
+        console.error('商品登録エラー:', err);
+        res.status(500).json({ message: 'サーバーエラー' });
+    }
+});
+
+
+
 // サーバー起動
 app.listen(PORT, () => {
     console.log(`サーバー起動: http://localhost:${PORT}`);
