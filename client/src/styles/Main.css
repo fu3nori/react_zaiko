@@ -3,4 +3,6 @@ h2.title {color: #000000;
     font-family: "Yu Gothic UI,ヒラギノ角ゴ, sans-serif", sans-serif;  }
 .title {color: #000000;
     font-family: "Yu Gothic UI,ヒラギノ角ゴ, sans-serif", sans-serif;  }
-.centering {margin-left: 50%}
+.centering {margin-left: 40%; width: 800px;}
+.left {float: left;padding: 10px}
+.right {float: right;padding: 10px}
