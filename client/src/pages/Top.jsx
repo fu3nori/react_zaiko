@@ -25,6 +25,9 @@ function Top() {
             const data = await res.json();
             if (!res.ok) throw new Error(data.message);
 
+            // user_id を保存
+            localStorage.setItem('user_id', data.user_id);
+
             console.log(`ログイン成功:`, data);
             navigate('/zaiko');
         } catch (err) {
@@ -46,6 +49,8 @@ function Top() {
             const data = await res.json();
             if (!res.ok) throw new Error(data.message);
 
+            // user_id を保存（登録APIのレスポンスに含まれている前提）
+            localStorage.setItem('user_id', data.user_id);
             setRegisterEmail('');
             setRegisterPassword('');
             navigate('/zaiko');
@@ -54,6 +59,7 @@ function Top() {
             alert(err.message);
         }
     };
+
 
     return (
         <div style={{ padding: '2rem' }}>

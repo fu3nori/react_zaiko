@@ -39,19 +39,26 @@ app.post('/api/register', async (req, res) => {
         // パスワードのハッシュ化
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // password_hash カラムに保存
-        await db.query(
+        // ユーザー挿入
+        const [result] = await db.query(
             'INSERT INTO users (email, password_hash) VALUES (?, ?)',
             [email, hashedPassword]
         );
 
-        res.status(201).json({ message: '登録成功' });
+        // result.insertId に新規ユーザーのIDが入っている
+        const user_id = result.insertId;
+
+        res.status(201).json({
+            message: '登録成功',
+            user_id: user_id
+        });
     } catch (err) {
         console.error('登録エラー:', err);
         res.status(500).json({ message: 'サーバーエラー' });
     }
 });
 
+// 🔑 ログインAPI
 // 🔑 ログインAPI
 app.post('/api/login', async (req, res) => {
     const { email, password } = req.body;
@@ -70,8 +77,10 @@ app.post('/api/login', async (req, res) => {
             return res.status(401).json({ message: 'パスワードが一致しません' });
         }
 
+        // user_id もトップレベルで返す
         res.status(200).json({
             message: 'ログイン成功',
+            user_id: user.id,
             user: {
                 id: user.id,
                 email: user.email
@@ -82,6 +91,7 @@ app.post('/api/login', async (req, res) => {
         res.status(500).json({ message: 'サーバーエラー' });
     }
 });
+
 
 // 商品マスター登録
 // server.js

@@ -9,6 +9,7 @@ function App() {
             <Routes>
                 <Route path="/" element={<Top />} />
                 <Route path="/zaiko" element={<Zaiko />} />
+                <Route path="/master" element={<Master />} />
             </Routes>
         </BrowserRouter>
     );
