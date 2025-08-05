@@ -113,6 +113,97 @@ app.post('/api/items', async (req, res) => {
     }
 });
 
+// 在庫一覧取得API
+app.get('/api/items', async (req, res) => {
+    const user_id = req.query.user_id;
+
+    if (!user_id) {
+        return res.status(400).json({ message: 'user_idが必要です' });
+    }
+
+    try {
+        const [items] = await db.query(
+            'SELECT id, name, quantity FROM items WHERE user_id = ?',
+            [user_id]
+        );
+        res.status(200).json({ items });
+    } catch (err) {
+        console.error('在庫一覧取得エラー:', err);
+        res.status(500).json({ message: 'サーバーエラー' });
+    }
+});
+
+// 入庫API
+app.post('/api/items/in', async (req, res) => {
+    const { user_id, item_id, quantity } = req.body;
+
+    if (!user_id || !item_id || !quantity) {
+        return res.status(400).json({ message: '必要な情報が不足しています' });
+    }
+
+    try {
+        // 数量を加算
+        await db.query(
+            'UPDATE items SET quantity = quantity + ? WHERE id = ? AND user_id = ?',
+            [quantity, item_id, user_id]
+        );
+
+        // ログを記録
+        await db.query(
+            'INSERT INTO logs (user_id, item_id, action, quantity) VALUES (?, ?, ?, ?)',
+            [user_id, item_id, 'in', quantity]
+        );
+
+        res.status(200).json({ message: '入庫処理が完了しました' });
+    } catch (err) {
+        console.error('入庫エラー:', err);
+        res.status(500).json({ message: 'サーバーエラー' });
+    }
+});
+
+// 出庫API
+app.post('/api/items/out', async (req, res) => {
+    const { user_id, item_id, quantity } = req.body;
+
+    if (!user_id || !item_id || !quantity) {
+        return res.status(400).json({ message: '必要な情報が不足しています' });
+    }
+
+    try {
+        // 現在の在庫数を取得
+        const [rows] = await db.query(
+            'SELECT quantity FROM items WHERE id = ? AND user_id = ?',
+            [item_id, user_id]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({ message: '該当する商品が見つかりません' });
+        }
+
+        const currentQuantity = rows[0].quantity;
+
+        if (currentQuantity < quantity) {
+            return res.status(400).json({ message: '在庫数以上の出庫は出来ません' });
+        }
+
+        // 数量を減算
+        await db.query(
+            'UPDATE items SET quantity = quantity - ? WHERE id = ? AND user_id = ?',
+            [quantity, item_id, user_id]
+        );
+
+        // ログを記録
+        await db.query(
+            'INSERT INTO logs (user_id, item_id, action, quantity) VALUES (?, ?, ?, ?)',
+            [user_id, item_id, 'out', quantity]
+        );
+
+        res.status(200).json({ message: '出庫処理が完了しました' });
+    } catch (err) {
+        console.error('出庫エラー:', err);
+        res.status(500).json({ message: 'サーバーエラー' });
+    }
+});
 
 
 // サーバー起動
