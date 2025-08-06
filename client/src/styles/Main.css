@@ -6,3 +6,17 @@ h2.title {color: #000000;
 .centering {margin-left: 40%; width: 800px;}
 .left {float: left;padding: 10px}
 .right {float: right;padding: 10px}
+/* ボタン共通スタイル */
+.button-small {
+    padding: 5px 10px;
+    margin: 5px 5px 5px 0;
+    border: none;
+    border-radius: 4px;
+    background-color: black;
+    color: white;
+    cursor: pointer;
+}
+
+.button-small:hover {
+    opacity: 0.8;
+}
