@@ -20,3 +20,35 @@ h2.title {color: #000000;
 .button-small:hover {
     opacity: 0.8;
 }
+
+.filter-box {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(140px, 1fr));
+    gap: .5rem;
+    align-items: end;
+    margin: 0 0 1rem;
+}
+.filter-box label { display: grid; gap: .25rem; font-size: .9rem; }
+.filter-actions { grid-column: 1 / -1; display: flex; gap: .5rem; }
+
+.log-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.log-table th, .log-table td {
+    border-bottom: 1px solid #e5e7eb;
+    padding: .5rem .25rem;
+}
+.log-table .num { text-align: right; width: 120px; }
+.type-in { color: #2563eb; }   /* blue */
+.type-out { color: #dc2626; }  /* red */
+
+.pager { margin-top: .75rem; display: flex; gap: .5rem; align-items: center; }
+th {color: #000000;
+    font-family: "Yu Gothic UI,ヒラギノ角ゴ, sans-serif", sans-serif;  }
+td {color: #000000;
+    font-family: "Yu Gothic UI,ヒラギノ角ゴ, sans-serif", sans-serif;  }
+label {color: #000000;
+    font-family: "Yu Gothic UI,ヒラギノ角ゴ, sans-serif", sans-serif;  }
+span {color: #000000;
+    font-family: "Yu Gothic UI,ヒラギノ角ゴ, sans-serif", sans-serif;  }

@@ -15,6 +15,10 @@ function Zaiko() {
         navigate('/master');
     };
 
+    const goToJournal = () => {
+        navigate('/journal');
+    };
+
     // 在庫一覧を取得
     const fetchItems = async () => {
         try {
@@ -76,7 +80,13 @@ function Zaiko() {
                 <strong> 商品マスター登録画面 </strong>
                 で登録してください。
             </p>
+            <div style={{cssFloat: 'left' , marginRight:10 }}>
             <button onClick={goToMaster}>商品マスター登録へ</button>
+            </div>
+
+
+
+            <div style={{paddingLeft: 10 , margin:10}}><button onClick={goToJournal}>ジャーナル画面へ</button></div>
 
             <h3 style={{ marginTop: '2rem', borderBottom: '2px solid black' }} className="title">在庫一覧</h3>
             <table style={{ borderCollapse: 'collapse', width: '100%' }}>

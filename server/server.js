@@ -241,7 +241,7 @@ app.get('/api/journal', async (req, res) => {
         const [rows] = await db.query(
             `SELECT 
          l.id, l.item_id, i.name AS item_name, l.action, l.quantity,
-         l.created_at AS date
+         DATE_FORMAT(l.created_at, '%Y-%m-%d %H:%i:%s') AS date
        FROM logs l
        JOIN items i ON i.id = l.item_id
        ${whereSql}
