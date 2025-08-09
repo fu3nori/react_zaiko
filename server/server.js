@@ -205,6 +205,57 @@ app.post('/api/items/out', async (req, res) => {
 });
 
 // ジャーナルAPI
+// userIdの取得（JWT導入前の暫定）
+function getUserId(req) {
+    return req.user?.id || req.session?.userId || Number(req.query.user_id);
+}
+
+app.get('/api/journal', async (req, res) => {
+    try {
+        const userId = getUserId(req);
+        if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+        const { from, to, action, item, page = 1, pageSize = 20 } = req.query;
+        const limit = Math.max(1, Math.min(200, Number(pageSize)));
+        const offset = (Math.max(1, Number(page)) - 1) * limit;
+
+        const where = ['l.user_id = ?'];
+        const params = [userId];
+
+        if (action === 'in' || action === 'out') { where.push('l.action = ?'); params.push(action); }
+        if (from) { where.push('l.created_at >= ?'); params.push(`${from} 00:00:00`); }
+        if (to)   { where.push('l.created_at <= ?'); params.push(`${to} 23:59:59`); }
+        if (item && item.trim()) { where.push('i.name LIKE ?'); params.push(`%${item.trim()}%`); }
+
+        const whereSql = `WHERE ${where.join(' AND ')}`;
+
+        const [cntRows] = await db.query(
+            `SELECT COUNT(*) AS cnt
+       FROM logs l
+       JOIN items i ON i.id = l.item_id
+       ${whereSql}`,
+            params
+        );
+        const total = cntRows[0]?.cnt ?? 0;
+        // 本番で時間がずれるようなら　'+00:00', '+09:00'　に変更
+        const [rows] = await db.query(
+            `SELECT 
+         l.id, l.item_id, i.name AS item_name, l.action, l.quantity,
+         l.created_at AS date
+       FROM logs l
+       JOIN items i ON i.id = l.item_id
+       ${whereSql}
+       ORDER BY l.created_at DESC
+       LIMIT ? OFFSET ?`,
+            [...params, limit, offset]
+        );
+
+        res.json({ rows, page: Number(page), pageSize: limit, total });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
 
 
 
