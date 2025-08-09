@@ -25,7 +25,7 @@ app.get('/', (req, res) => {
     res.send('APIサーバー稼働中');
 });
 
-// 🔐 ユーザー登録API
+// ユーザー登録API
 app.post('/api/register', async (req, res) => {
     const { email, password } = req.body;
 
@@ -58,8 +58,8 @@ app.post('/api/register', async (req, res) => {
     }
 });
 
-// 🔑 ログインAPI
-// 🔑 ログインAPI
+
+//  ログインAPI
 app.post('/api/login', async (req, res) => {
     const { email, password } = req.body;
 
@@ -94,7 +94,6 @@ app.post('/api/login', async (req, res) => {
 
 
 // 商品マスター登録
-// server.js
 app.post('/api/items', async (req, res) => {
     const { user_id, name, quantity } = req.body;
 
@@ -204,6 +203,9 @@ app.post('/api/items/out', async (req, res) => {
         res.status(500).json({ message: 'サーバーエラー' });
     }
 });
+
+// ジャーナルAPI
+
 
 
 // サーバー起動
