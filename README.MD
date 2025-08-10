@@ -39,7 +39,7 @@ vhost の /api → http://127.0.0.1:3001/api リバースプロキシ設定
 React: .env.production に VITE_API_BASE=/api  
 開発: .env.development に VITE_API_BASE=http://localhost:3001  
 フロントの API 呼び出しは すべて api インスタンス経由（直URL/ポート直書き禁止）  
-サーバ .env に JWT_SECRET, JWT_EXPIRES_IN, Gmail 用 OAuth クレデンシャル  
+server/.envに各種設定記載  
 
 ## パスワードリマインダー用のSendGrid API 設定
 
