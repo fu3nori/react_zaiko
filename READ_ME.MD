@@ -1,14 +1,25 @@
-# 在庫君 取扱説明書
+# デュアルライセンスについて
+本プロジェクトはデュアルライセンスです：
+- オープンソース利用：GPL-3.0-only
+- 商用・クローズド利用：商用ライセンス（有償、個別契約）
+
+利用者は上記いずれか一方のライセンスを選択して利用できます。  
+GPL-3.0を選ぶ場合は、その義務（派生物のソース提供等）に従ってください。  
+これらの義務に同意できない場合は、商用ライセンスをご検討ください。  
+商用ライセンスの詳細・見積り：<連絡先メール cap.fuminori.usui@gmail.com>
+
+## 在庫君 取扱説明書
 ## オンライン在庫管理アプリケーション
 このアプリケーションではmysqlまたは,mariadbを使います  
 任意の名称のDBを作成後、直下のinstall.sqlからテーブルをインポートしてください  
-直下の.envの次の項目を自分で設定した通りに記述して下さい  
+serverディレクトリ直下の.envの次の項目を自分で設定した通りに記述して下さい  
 
-`#接続するDB情報を記述例
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=
-DB_NAME=zaiko`
+````#接続するDB情報記述例
+DB_HOST=localhost  
+DB_USER=root   
+DB_PASSWORD=  
+DB_NAME=zaiko
+````
 またランダムシードをなるべく長い半角英数で記載して下さい  
 
 `#ランダムシードを記述
@@ -45,7 +56,11 @@ Single Sender Verification
 Settings → Sender Authentication → Single Sender Verification  
 送信者の名前/メール/住所など入力 → そのアドレスに確認メール → Verify
 #### env設定
-.env の MAIL_FROM に その検証済みアドレス を設定
-.envの例
-SENDGRID_API_KEY=SG.xxxxxxxx               # ダッシュボードで発行してメモした物
-MAIL_FROM="noreply@zaikokun.com" # Single Senderで設定したメールアドレス
+.env の MAIL_FROM に その検証済みアドレス を設定  
+SENDGRID_API_KEY にsendgrid で取得したAPI KEYを設定 
+
+sendgridの設定を.envに記載する例
+````
+SENDGRID_API_KEY=SG.xxxxxxxx              # ダッシュボードで発行してメモした物  
+MAIL_FROM="noreply@zaikokun.com" # Single Senderで設定したメールアドレス  
+````

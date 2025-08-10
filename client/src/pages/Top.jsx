@@ -76,7 +76,7 @@ function Top() {
                         placeholder="パスワード"
                         value={loginPassword}
                         onChange={(e) => setLoginPassword(e.target.value)}
-                    /><br />
+                    /><br /><br />
                     <button onClick={handleLogin}>ログイン</button>
                 </div>
 
@@ -94,25 +94,26 @@ function Top() {
                         placeholder="パスワード"
                         value={registerPassword}
                         onChange={(e) => setRegisterPassword(e.target.value)}
-                    /><br />
+                    /><br /><br />
                     <button onClick={handleRegister}>アカウント作成</button>
                 </div>
             </div>
 
             <div style={{ clear: 'both' }} />
-            <div style={{ marginTop: 8 }}>
-                <a href="/leagal">利用規約（必ずお読みください）</a>
+            <div style={{ marginTop: 8, marginLeft: "40%" }}>
+                <a href="/leagal"><strong>利用規約（必ずお読みください）</strong></a>
             </div>
-            <div style={{ marginTop: 8 }}>
-                <a href="/forgot">パスワードをお忘れですか？</a>
+            <div style={{ marginTop: 8, marginLeft: "40%" }}>
+                <a href="/forgot"><strong>パスワードをお忘れですか？</strong></a>
             </div>
-            <div className="footer">
+            <div className="footer" style={{ marginTop: 8, marginLeft: "80%" }}>
                 <p className="title" style={{ textAlign: 'center' }}>
                     Powered by React and Vite<br />
                     <img src={reactLogo} width="50" alt="React logo" />
                 </p>
             </div>
         </div>
+
     );
 }
 
