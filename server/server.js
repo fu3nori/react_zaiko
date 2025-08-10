@@ -6,7 +6,8 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 const cors = require('cors');
-
+const crypto = require('crypto');
+const { sendGmail } = require('./services/gmail');
 // ミドルウェア
 //app.use(cors());
 app.use(cors({ origin: 'http://localhost:5173' }));
@@ -44,6 +45,85 @@ function authRequired(req, res, next) {
             return res.status(401).json({ message: 'トークンが無効または期限切れです' });
         }
     }
+
+// パスワードリセット要求
+app.post('/api/password/reset-request', async (req, res) => {
+    const { email } = req.body;
+    // 同じレスポンスで情報漏えいを防ぐ（存在しないメールも同じメッセージ）
+    const SAFE_MSG = { ok: true, message: 'もし該当アカウントが存在すれば、リセットメールを送信しました。' };
+
+    try {
+        if (!email || !email.includes('@')) return res.status(200).json(SAFE_MSG);
+
+        const [users] = await db.query('SELECT id, email FROM users WHERE email=? LIMIT 1', [email]);
+        if (users.length === 0) return res.status(200).json(SAFE_MSG);
+
+        const user = users[0];
+        const token = crypto.randomBytes(32).toString('hex'); // 64桁
+        const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30分
+
+        await db.query(
+            'INSERT INTO password_resets (user_id, token, expires_at) VALUES (?,?,?)',
+            [user.id, token, expiresAt]
+        );
+
+        const resetUrl = `https://zaikokun.com/reset?token=${token}`;
+        const html = `
+      <p>パスワード再設定のご案内</p>
+      <p>以下のリンクから30分以内に新しいパスワードを設定してください。</p>
+      <p><a href="${resetUrl}">${resetUrl}</a></p>
+      <p>もしこのメールに心当たりがない場合は破棄してください。</p>
+    `;
+
+        await sendGmail({ to: user.email, subject: '【在庫くん】パスワード再設定', html });
+
+        return res.status(200).json(SAFE_MSG);
+    } catch (e) {
+        console.error('reset-request error:', e);
+        return res.status(200).json(SAFE_MSG); // 常に同じ応答
+    }
+});
+
+
+// パスワードの再設定
+app.post('/api/password/reset', async (req, res) => {
+    const { token, newPassword } = req.body;
+    if (!token || !newPassword || newPassword.length < 8) {
+        return res.status(400).json({ message: '不正なリクエストです' });
+    }
+
+    try {
+        // トークン有効性チェック（未使用・期限内）
+        const [rows] = await db.query(
+            `SELECT pr.id, pr.user_id, pr.expires_at, pr.used_at
+         FROM password_resets pr
+        WHERE pr.token = ?
+        LIMIT 1`,
+            [token]
+        );
+
+        const rec = rows[0];
+        const now = new Date();
+
+        if (!rec || rec.used_at || new Date(rec.expires_at) < now) {
+            return res.status(400).json({ message: 'トークンが無効または期限切れです' });
+        }
+
+        // パスワード更新
+        const hash = await bcrypt.hash(newPassword, 10);
+        await db.query('UPDATE users SET password_hash=? WHERE id=?', [hash, rec.user_id]);
+
+        // トークンを使用済みに
+        await db.query('UPDATE password_resets SET used_at=NOW() WHERE id=?', [rec.id]);
+
+        return res.json({ ok: true, message: 'パスワードを更新しました' });
+    } catch (e) {
+        console.error('reset error:', e);
+        return res.status(500).json({ message: 'サーバーエラー' });
+    }
+});
+
+
 // ============================
 
 

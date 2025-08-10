@@ -100,6 +100,12 @@ function Top() {
             </div>
 
             <div style={{ clear: 'both' }} />
+            <div style={{ marginTop: 8 }}>
+                <a href="/leagal">利用規約（必ずお読みください）</a>
+            </div>
+            <div style={{ marginTop: 8 }}>
+                <a href="/forgot">パスワードをお忘れですか？</a>
+            </div>
             <div className="footer">
                 <p className="title" style={{ textAlign: 'center' }}>
                     Powered by React and Vite<br />

@@ -80,3 +80,8 @@ https://developers.google.com/oauthplayground にアクセス
 アカウントの選択を求められるので　今回取得したアカウントを選ぶ  
 Authorization codeが表示されるのでメモ帳に保存  
 下のボタンをクリックするとRefresh tokenとAccess tokenが生成されるのでそれもメモ帳に保存  
+https://console.cloud.google.com/ にアクセスし、右上のアカウントを今回使うメールのアカウントに切り替え
+左上のプロジェクト選択ボタンでzaikokun-prodを選ぶ  
+APIとサービスをクリック  
+対象をクリック  
+アプリを公開をクリック  
