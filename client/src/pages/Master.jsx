@@ -1,33 +1,26 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/Main.css';
+import api from '../lib/api';
 
 function Master() {
     const navigate = useNavigate();
     const [itemName, setItemName] = useState('');
     const [initialQuantity, setInitialQuantity] = useState('');
-    const user_id = localStorage.getItem('user_id');
+
     const handleRegister = async () => {
         try {
-            const res = await fetch('/api/items', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    user_id: user_id,
-                    name: itemName,
-                    quantity: initialQuantity
-                })
-            });
+        await api.post('/api/items', {
+        name: itemName,
+        quantity: Number(initialQuantity) || 0,
+        });
+        setItemName('');
+        setInitialQuantity('');
+        navigate('/zaiko');
+    } catch (err) {
+        alert(err.message || '登録に失敗しました');
+    }
 
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message);
-            alert('商品登録成功！');
-            setItemName('');
-            setInitialQuantity('');
-        } catch (err) {
-            console.error(err);
-            alert(err.message);
-        }
     };
 
     return (

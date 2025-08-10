@@ -2,14 +2,15 @@
 const express = require('express');
 const mysql = require('mysql2');
 const bcrypt = require('bcrypt');
-const cors = require('cors');
 require('dotenv').config();
-
 const app = express();
 const PORT = process.env.PORT || 3001;
+const cors = require('cors');
 
 // ミドルウェア
-app.use(cors());
+//app.use(cors());
+app.use(cors({ origin: 'http://localhost:5173' }));
+const jwt = require('jsonwebtoken');
 app.use(express.json());
 
 // DB接続（Promise対応のPoolで初期化）
@@ -19,6 +20,32 @@ const db = mysql.createPool({
     password: process.env.DB_PASSWORD || '',
     database: process.env.DB_NAME || 'zaiko',
 }).promise();
+
+// jWT関連
+function signAccessToken(user) {
+    return jwt.sign(
+        { sub: user.id, email: user.email, role: user.role ?? 0 },
+        process.env.JWT_SECRET,
+        { expiresIn: process.env.JWT_EXPIRES_IN || '15m' }
+        );
+}
+
+function authRequired(req, res, next) {
+    const auth = req.headers.authorization || '';
+    const [scheme, token] = auth.split(' ');
+    if (scheme !== 'Bearer' || !token) {
+        return res.status(401).json({ message: 'トークンが必要です' });
+        }
+    try {
+        const payload = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = payload; // { sub, email, role, iat, exp }
+        next();
+        } catch (e) {
+            return res.status(401).json({ message: 'トークンが無効または期限切れです' });
+        }
+    }
+// ============================
+
 
 // 動作確認
 app.get('/', (req, res) => {
@@ -30,33 +57,28 @@ app.post('/api/register', async (req, res) => {
     const { email, password } = req.body;
 
     try {
-        // 既存ユーザー確認
         const [rows] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
         if (rows.length > 0) {
             return res.status(400).json({ message: '既に登録されています' });
         }
 
-        // パスワードのハッシュ化
         const hashedPassword = await bcrypt.hash(password, 10);
-
-        // ユーザー挿入
         const [result] = await db.query(
             'INSERT INTO users (email, password_hash) VALUES (?, ?)',
             [email, hashedPassword]
         );
 
-        // result.insertId に新規ユーザーのIDが入っている
         const user_id = result.insertId;
+        const token = signAccessToken({ id: user_id, email }); // ← const を付ける
 
-        res.status(201).json({
-            message: '登録成功',
-            user_id: user_id
-        });
+        // レスポンスは1回だけ
+        return res.status(201).json({ message: '登録成功', user_id, token });
     } catch (err) {
         console.error('登録エラー:', err);
-        res.status(500).json({ message: 'サーバーエラー' });
+        return res.status(500).json({ message: 'サーバーエラー' });
     }
 });
+
 
 
 //  ログインAPI
@@ -78,30 +100,34 @@ app.post('/api/login', async (req, res) => {
         }
 
         // user_id もトップレベルで返す
+ //       res.status(200).json({
+ //           message: 'ログイン成功',
+ //           user_id: user.id,
+ //           user: {
+ //               id: user.id,
+ //               email: user.email
+ //           }
+ //       });
+        // JWT を返す
+        const token = signAccessToken(user);
         res.status(200).json({
-            message: 'ログイン成功',
-            user_id: user.id,
-            user: {
-                id: user.id,
-                email: user.email
-            }
+                message: 'ログイン成功',
+            token,
+            user: { id: user.id, email: user.email }
         });
-    } catch (err) {
+      } catch (err) {
         console.error('ログインエラー:', err);
         res.status(500).json({ message: 'サーバーエラー' });
     }
 });
 
+// 商品マスター登録（JWT 必須）
+    app.post('/api/items', authRequired, async (req, res) => {
+        const { name, quantity } = req.body;
+        const user_id = req.user.sub;
+        if (!name || !name.trim()) return res.status(400).json({ message: '商品名が必要です' });
 
-// 商品マスター登録
-app.post('/api/items', async (req, res) => {
-    const { user_id, name, quantity } = req.body;
-
-    if (!user_id || !name) {
-        return res.status(400).json({ message: '必要な情報が不足しています' });
-    }
-
-    try {
+        try {
         await db.query('INSERT INTO items (user_id, name, quantity) VALUES (?, ?, ?)', [
             user_id, name, quantity || 0,
         ]);
@@ -113,12 +139,8 @@ app.post('/api/items', async (req, res) => {
 });
 
 // 在庫一覧取得API
-app.get('/api/items', async (req, res) => {
-    const user_id = req.query.user_id;
-
-    if (!user_id) {
-        return res.status(400).json({ message: 'user_idが必要です' });
-    }
+app.get('/api/items', authRequired, async (req, res) => {
+    const user_id = req.user.sub;
 
     try {
         const [items] = await db.query(
@@ -133,10 +155,13 @@ app.get('/api/items', async (req, res) => {
 });
 
 // 入庫API
-app.post('/api/items/in', async (req, res) => {
-    const { user_id, item_id, quantity } = req.body;
-
-    if (!user_id || !item_id || !quantity) {
+app.post('/api/items/in', authRequired, async (req, res) => {
+    const { item_id, quantity } = req.body;
+    const user_id = req.user.sub;
+    if (!Number.isInteger(quantity) || quantity <= 0) {
+        return res.status(400).json({ message: '数量は正の整数で指定してください' });
+    }
+    if (!item_id || !quantity) {
         return res.status(400).json({ message: '必要な情報が不足しています' });
     }
 
@@ -161,13 +186,15 @@ app.post('/api/items/in', async (req, res) => {
 });
 
 // 出庫API
-app.post('/api/items/out', async (req, res) => {
-    const { user_id, item_id, quantity } = req.body;
-
-    if (!user_id || !item_id || !quantity) {
+app.post('/api/items/out', authRequired, async (req, res) => {
+    const { item_id, quantity } = req.body;
+    const user_id = req.user.sub;
+    if (!Number.isInteger(quantity) || quantity <= 0) {
+        return res.status(400).json({ message: '数量は正の整数で指定してください' });
+    }
+    if (!item_id || !quantity){
         return res.status(400).json({ message: '必要な情報が不足しています' });
     }
-
     try {
         // 現在の在庫数を取得
         const [rows] = await db.query(
@@ -205,15 +232,9 @@ app.post('/api/items/out', async (req, res) => {
 });
 
 // ジャーナルAPI
-// userIdの取得（JWT導入前の暫定）
-function getUserId(req) {
-    return req.user?.id || req.session?.userId || Number(req.query.user_id);
-}
-
-app.get('/api/journal', async (req, res) => {
+app.get('/api/journal', authRequired, async (req, res) => {
     try {
-        const userId = getUserId(req);
-        if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+        const userId = req.user.sub;
 
         const { from, to, action, item, page = 1, pageSize = 20 } = req.query;
         const limit = Math.max(1, Math.min(200, Number(pageSize)));

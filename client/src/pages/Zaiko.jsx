@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../lib/api';
+
 import '../styles/Main.css';
 
 function Zaiko() {
@@ -22,9 +23,7 @@ function Zaiko() {
     // 在庫一覧を取得
     const fetchItems = async () => {
         try {
-            const res = await axios.get('http://localhost:3001/api/items', {
-                params: { user_id }
-            });
+            const res = await api.get('/api/items');
             setItems(res.data.items);
         } catch (err) {
             console.error('在庫取得エラー:', err);
@@ -41,11 +40,7 @@ function Zaiko() {
         if (!quantity || quantity <= 0) return alert('正しい入庫数を入力してください');
 
         try {
-            await axios.post('http://localhost:3001/api/items/in', {
-                user_id,
-                item_id: itemId,
-                quantity,
-            });
+            await api.post('/api/items/in', { item_id: itemId, quantity });
             setInQuantities({ ...inQuantities, [itemId]: '' });
             fetchItems();
         } catch (err) {
@@ -60,16 +55,13 @@ function Zaiko() {
         if (quantity > currentStock) return alert('在庫数以上の出庫はできません');
 
         try {
-            await axios.post('http://localhost:3001/api/items/out', {
-                user_id,
-                item_id: itemId,
-                quantity,
-            });
+            await api.post('/api/items/out', { item_id: itemId, quantity });
             setOutQuantities({ ...outQuantities, [itemId]: '' });
             fetchItems();
-        } catch (err) {
+            } catch (err) {
             console.error('出庫エラー:', err);
-        }
+            }
+
     };
 
     return (

@@ -1,71 +1,67 @@
+// src/pages/Top.jsx
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import '../styles/main.css';
-import reactLogo from '../assets/react.svg'
+import reactLogo from '../assets/react.svg';
+import api from '../lib/api'; // ★ 追加：Bearer自動付与＆401ハンドリング
 
 function Top() {
     // 状態管理
     const navigate = useNavigate();
+    const location = useLocation();
     const [loginEmail, setLoginEmail] = useState('');
     const [loginPassword, setLoginPassword] = useState('');
     const [registerEmail, setRegisterEmail] = useState('');
     const [registerPassword, setRegisterPassword] = useState('');
+    const from = location.state?.from?.pathname || '/zaiko'; // 認可ガードから戻る先
 
-    // ログイン用のハンドラ
+    // ログイン
     const handleLogin = async () => {
         try {
-            const res = await fetch('/api/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    email: loginEmail,
-                    password: loginPassword
-                })
+            const { data } = await api.post('/api/login', {
+                email: loginEmail,
+                password: loginPassword,
             });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message);
+            // JWT を保存（以降のAPIはinterceptorが自動でBearer付与）
+            localStorage.setItem('access_token', data.token);
+            // UI用途でユーザーID使いたい場合は任意保存
+            if (data.user?.id) localStorage.setItem('user_id', String(data.user.id));
 
-            // user_id を保存
-            localStorage.setItem('user_id', data.user_id);
-
-            console.log(`ログイン成功:`, data);
-            navigate('/zaiko');
+            navigate(from, { replace: true });
         } catch (err) {
-            console.error(err.message);
-            alert(err.message);
+            const msg = err?.response?.data?.message || 'ログインに失敗しました';
+            console.error(msg);
+            alert(msg);
         }
     };
 
+    // 新規登録
     const handleRegister = async () => {
         try {
-            const res = await fetch('/api/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    email: registerEmail,
-                    password: registerPassword
-                })
+            const { data } = await api.post('/api/register', {
+                email: registerEmail,
+                password: registerPassword,
             });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message);
+            // 登録時もトークンが返る仕様に合わせる
+            if (data.token) localStorage.setItem('access_token', data.token);
+            if (data.user_id) localStorage.setItem('user_id', String(data.user_id));
 
-            // user_id を保存（登録APIのレスポンスに含まれている前提）
-            localStorage.setItem('user_id', data.user_id);
             setRegisterEmail('');
             setRegisterPassword('');
             navigate('/zaiko');
         } catch (err) {
-            console.error(err.message);
-            alert(err.message);
+            const msg = err?.response?.data?.message || 'アカウント作成に失敗しました';
+            console.error(msg);
+            alert(msg);
         }
     };
-
 
     return (
         <div style={{ padding: '2rem' }}>
             <div className="centering">
                 <h1 className="title">在庫くん</h1>
                 <p className="title">在庫くんは倉庫の在庫の管理と入出庫履歴の記録が出来る無料ウェブサービスです</p>
+
                 <div className="left">
                     {/* ログインフォーム */}
                     <h2 className="title">ログイン</h2>

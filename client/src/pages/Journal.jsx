@@ -1,6 +1,7 @@
 // src/pages/Journal.jsx
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import api from '../lib/api';
 
 export default function Journal() {
     const navigate = useNavigate();
@@ -28,16 +29,14 @@ export default function Journal() {
             if (v !== '' && v !== null && v !== undefined) p.set(k, String(v));
         });
         return p.toString();
-    }, [filters, USER_ID]);
+    }, [filters]);
 
     const fetchLogs = async () => {
         setLoading(true);
         setErr('');
         try {
-            const res = await fetch(`/api/journal?${qs}`);
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const json = await res.json();
-            setData(json);
+            const res = await api.get('/api/journal', { params: filters });
+            setData(res.data);
         } catch (e) {
             setErr(e.message || '取得に失敗しました');
         } finally {
