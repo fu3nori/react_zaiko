@@ -8,13 +8,19 @@ const PORT = process.env.PORT || 3001;
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-const { sendMail } = require('./services/sendgrid'); // ★ SendGrid送信
+const { sendMail } = require('./services/sendgrid'); // SendGrid送信
 
-// ミドルウェア
-app.use(cors({ origin: 'http://localhost:5173' }));
+// ====== 設定 ======
+const CLIENT_BASE_URL = (process.env.CLIENT_BASE_URL || 'http://localhost:5173').replace(/\/$/, '');
+const CORS_ORIGIN = process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(',').map(s => s.trim())
+    : ['http://localhost:5173'];
+
+// ====== ミドルウェア ======
+app.use(cors({ origin: CORS_ORIGIN }));
 app.use(express.json());
 
-// DB接続（PromisePool）
+// ====== DB接続（PromisePool）======
 const db = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'root',
@@ -22,7 +28,7 @@ const db = mysql.createPool({
     database: process.env.DB_NAME || 'zaiko',
 }).promise();
 
-// JWT関連
+// ====== JWT ======
 function signAccessToken(user) {
     return jwt.sign(
         { sub: user.id, email: user.email, role: user.role ?? 0 },
@@ -45,12 +51,12 @@ function authRequired(req, res, next) {
     }
 }
 
-// 動作確認
+// ====== 動作確認 ======
 app.get('/', (_req, res) => {
     res.send('APIサーバー稼働中');
 });
 
-// ユーザー登録
+// ====== ユーザー登録 ======
 app.post('/api/register', async (req, res) => {
     const { email, password } = req.body;
     try {
@@ -71,7 +77,7 @@ app.post('/api/register', async (req, res) => {
     }
 });
 
-// ログイン
+// ====== ログイン ======
 app.post('/api/login', async (req, res) => {
     const { email, password } = req.body;
     try {
@@ -90,14 +96,17 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// 商品マスター登録
+// ====== 商品マスター登録 ======
 app.post('/api/items', authRequired, async (req, res) => {
     const { name, quantity } = req.body;
     const user_id = req.user.sub;
     if (!name || !name.trim()) return res.status(400).json({ message: '商品名が必要です' });
+    const qty = Number(quantity ?? 0);
+    if (!Number.isFinite(qty) || qty < 0) return res.status(400).json({ message: '数量が不正です' });
+
     try {
         await db.query('INSERT INTO items (user_id, name, quantity) VALUES (?,?,?)', [
-            user_id, name, quantity || 0,
+            user_id, name.trim(), Math.trunc(qty),
         ]);
         return res.status(201).json({ message: '商品登録に成功しました' });
     } catch (err) {
@@ -106,7 +115,7 @@ app.post('/api/items', authRequired, async (req, res) => {
     }
 });
 
-// 在庫一覧
+// ====== 在庫一覧 ======
 app.get('/api/items', authRequired, async (req, res) => {
     const user_id = req.user.sub;
     try {
@@ -118,19 +127,21 @@ app.get('/api/items', authRequired, async (req, res) => {
     }
 });
 
-// 入庫
+// ====== 入庫 ======
 app.post('/api/items/in', authRequired, async (req, res) => {
-    const { item_id, quantity } = req.body;
     const user_id = req.user.sub;
-    if (!item_id) return res.status(400).json({ message: '商品IDが必要です' });
-    if (!Number.isInteger(quantity) || quantity <= 0)
-        return res.status(400).json({ message: '数量は正の整数で指定してください' });
+    const itemId = Number(req.body.item_id);
+    const qty = Number(req.body.quantity);
+
+    if (!Number.isInteger(itemId) || itemId <= 0) return res.status(400).json({ message: '商品IDが不正です' });
+    if (!Number.isInteger(qty) || qty <= 0) return res.status(400).json({ message: '数量は正の整数で指定してください' });
+
     try {
         await db.query('UPDATE items SET quantity = quantity + ? WHERE id=? AND user_id=?', [
-            quantity, item_id, user_id,
+            qty, itemId, user_id,
         ]);
         await db.query('INSERT INTO logs (user_id, item_id, action, quantity) VALUES (?,?,?,?)', [
-            user_id, item_id, 'in', quantity,
+            user_id, itemId, 'in', qty,
         ]);
         return res.json({ message: '入庫処理が完了しました' });
     } catch (err) {
@@ -139,27 +150,28 @@ app.post('/api/items/in', authRequired, async (req, res) => {
     }
 });
 
-// 出庫
+// ====== 出庫 ======
 app.post('/api/items/out', authRequired, async (req, res) => {
-    const { item_id, quantity } = req.body;
     const user_id = req.user.sub;
-    if (!item_id) return res.status(400).json({ message: '商品IDが必要です' });
-    if (!Number.isInteger(quantity) || quantity <= 0)
-        return res.status(400).json({ message: '数量は正の整数で指定してください' });
+    const itemId = Number(req.body.item_id);
+    const qty = Number(req.body.quantity);
+
+    if (!Number.isInteger(itemId) || itemId <= 0) return res.status(400).json({ message: '商品IDが不正です' });
+    if (!Number.isInteger(qty) || qty <= 0) return res.status(400).json({ message: '数量は正の整数で指定してください' });
 
     try {
         const [rows] = await db.query('SELECT quantity FROM items WHERE id=? AND user_id=?', [
-            item_id, user_id,
+            itemId, user_id,
         ]);
         if (!rows.length) return res.status(404).json({ message: '該当する商品が見つかりません' });
-        if (rows[0].quantity < quantity)
+        if (rows[0].quantity < qty)
             return res.status(400).json({ message: '在庫数以上の出庫は出来ません' });
 
         await db.query('UPDATE items SET quantity = quantity - ? WHERE id=? AND user_id=?', [
-            quantity, item_id, user_id,
+            qty, itemId, user_id,
         ]);
         await db.query('INSERT INTO logs (user_id, item_id, action, quantity) VALUES (?,?,?,?)', [
-            user_id, item_id, 'out', quantity,
+            user_id, itemId, 'out', qty,
         ]);
         return res.json({ message: '出庫処理が完了しました' });
     } catch (err) {
@@ -168,7 +180,7 @@ app.post('/api/items/out', authRequired, async (req, res) => {
     }
 });
 
-// ジャーナル
+// ====== ジャーナル ======
 app.get('/api/journal', authRequired, async (req, res) => {
     try {
         const userId = req.user.sub;
@@ -210,7 +222,7 @@ app.get('/api/journal', authRequired, async (req, res) => {
     }
 });
 
-// パスワードリセット要求（SendGridでメール送信）
+// ====== パスワードリセット要求（SendGridでメール送信）======
 app.post('/api/password/reset-request', async (req, res) => {
     const { email } = req.body;
     const SAFE_MSG = { ok: true, message: 'もし該当アカウントが存在すれば、リセットメールを送信しました。' };
@@ -230,7 +242,7 @@ app.post('/api/password/reset-request', async (req, res) => {
             [user.id, token, expiresAt]
         );
 
-        const resetUrl = `https://zaikokun.com/reset?token=${token}`;
+        const resetUrl = `${CLIENT_BASE_URL}/reset?token=${token}`;
         const html = `
       <p>パスワード再設定のご案内</p>
       <p>以下のリンクから30分以内に新しいパスワードを設定してください。</p>
@@ -242,11 +254,11 @@ app.post('/api/password/reset-request', async (req, res) => {
         return res.status(200).json(SAFE_MSG);
     } catch (e) {
         console.error('reset-request error:', e);
-        return res.status(200).json(SAFE_MSG); // 情報漏えいを避ける
+        return res.status(200).json(SAFE_MSG); // 情報漏洩防止のため常に同じレスポンス
     }
 });
 
-// パスワード再設定
+// ====== パスワード再設定 ======
 app.post('/api/password/reset', async (req, res) => {
     const { token, newPassword } = req.body;
     if (!token || !newPassword || newPassword.length < 8) {
@@ -266,7 +278,20 @@ app.post('/api/password/reset', async (req, res) => {
 
         const hash = await bcrypt.hash(newPassword, 10);
         await db.query('UPDATE users SET password_hash=? WHERE id=?', [hash, rec.user_id]);
-        await db.query('UPDATE password_resets SET used_at=NOW() WHERE id=?', [rec.id]);
+        await db.query('UPDATE password_resets SET used_at=NOW() WHERE id=?', [rec.id]
+
+
+
+
+
+
+
+
+
+
+
+
+        );
 
         return res.json({ ok: true, message: 'パスワードを更新しました' });
     } catch (e) {
@@ -275,7 +300,22 @@ app.post('/api/password/reset', async (req, res) => {
     }
 });
 
-// 起動
+// ====== 一時テストAPI（確認後は削除OK）======
+app.post('/api/_test_mail', async (req, res) => {
+    try {
+        await sendMail({
+            to: req.body.to || process.env.SENDGRID_FROM,
+            subject: 'SendGrid test',
+            html: '<b>Hello from Zaikokun</b>',
+        });
+        res.json({ ok: true });
+    } catch (e) {
+        console.error(e.response?.body || e);
+        res.status(500).json({ ok: false, error: e.message });
+    }
+});
+
+// ====== 起動 ======
 app.listen(PORT, () => {
     console.log(`サーバー起動: http://localhost:${PORT}`);
 });

@@ -62,7 +62,7 @@ export default function Reset() {
                 </div>
             </form>
 
-            {msg && <p style={{ marginTop: 12 }}>{msg}</p>}
+            {msg && <p style={{ marginTop: 12 }} className="title">{msg}</p>}
         </div>
     );
 }
