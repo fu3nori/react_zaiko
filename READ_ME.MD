@@ -35,6 +35,7 @@ React: .env.production に VITE_API_BASE=/api
 ### 事前準備
 メールアカウントを取って下さい  
 #### SendGrid にサインアップ  
+https://www.twilio.com/ja-jp  
 ダッシュボード → Settings → API Keys → 「Create API Key」
 API KEYをメモ  
 権限：Full Access か Mail Send（送信のみならこれで十分）    
@@ -47,4 +48,4 @@ Settings → Sender Authentication → Single Sender Verification
 .env の MAIL_FROM に その検証済みアドレス を設定
 .envの例
 SENDGRID_API_KEY=SG.xxxxxxxx               # ダッシュボードで発行してメモした物
-MAIL_FROM="在庫くん <noreply@zaikokun.com>" # Single Senderで登録したメールアドレス
+MAIL_FROM="noreply@zaikokun.com" # Single Senderで設定したメールアドレス
