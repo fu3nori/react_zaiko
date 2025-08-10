@@ -30,16 +30,16 @@ JWT_SECRET=ghskcmffstghhkkkkswsgjjyyh`
 SE LINUX: disable
 
 セキュリティグループ：Outbound 443 許可 
-セキュリティグループ：Inbound 443 許可
-セキュリティグループ：Outbound 3306 許可
-セキュリティグループ：Inbound 3306 許可
+セキュリティグループ：Inbound 443 許可  
+セキュリティグループ：Outbound 3306 許可  
+セキュリティグループ：Inbound 3306 許可  
 
-Apache: mod_ssl, mod_proxy, mod_proxy_http, mod_rewrite 有効
-vhost の /api → http://127.0.0.1:3001/api リバースプロキシ設定
-React: .env.production に VITE_API_BASE=/api
-開発: .env.development に VITE_API_BASE=http://localhost:3001
-フロントの API 呼び出しは すべて api インスタンス経由（直URL/ポート直書き禁止）
-サーバ .env に JWT_SECRET, JWT_EXPIRES_IN, Gmail 用 OAuth クレデンシャル
+Apache: mod_ssl, mod_proxy, mod_proxy_http, mod_rewrite 有効  
+vhost の /api → http://127.0.0.1:3001/api リバースプロキシ設定  
+React: .env.production に VITE_API_BASE=/api  
+開発: .env.development に VITE_API_BASE=http://localhost:3001  
+フロントの API 呼び出しは すべて api インスタンス経由（直URL/ポート直書き禁止）  
+サーバ .env に JWT_SECRET, JWT_EXPIRES_IN, Gmail 用 OAuth クレデンシャル  
 
 ## パスワードリマインダー用のSendGrid API 設定
 
