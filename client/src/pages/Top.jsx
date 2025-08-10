@@ -1,7 +1,7 @@
 // src/pages/Top.jsx
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import '../styles/main.css';
+import '../styles/Main.css';
 import reactLogo from '../assets/react.svg';
 import api from '../lib/api'; // ★ 追加：Bearer自動付与＆401ハンドリング
 
