@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 import '../styles/Main.css';
 
-function Leagal() {
+function Legal() {
     const navigate = useNavigate();
 
     const goToTop = () => {
@@ -41,4 +41,4 @@ function Leagal() {
     );
 }
 
-export default Leagal;
+export default Legal;

@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import api from '../lib/api';
 import '../styles/Main.css';
-
+import useAuthGate from '../hooks/useAuthGate';
 function Zaiko() {
     const navigate = useNavigate();
     const [items, setItems] = useState([]);
@@ -15,6 +15,15 @@ function Zaiko() {
     const goToMaster = () => navigate('/master');
     const goToJournal = () => navigate('/journal');
 
+    const TOKEN_KEYS = ['token', 'access_token', 'jwt', 'accessToken'];
+    const pickStoredToken = () => {
+        for (const k of TOKEN_KEYS) {
+            const v = localStorage.getItem(k) || sessionStorage.getItem(k);
+            if (v) return { key: k, value: v };
+        }
+        return null;
+    };
+
     // 在庫一覧を取得
     const fetchItems = async () => {
         try {
@@ -25,17 +34,16 @@ function Zaiko() {
         }
     };
 
+    useAuthGate();
+
+
     // 初回マウント時：トークン確認 → アラート → ヘッダ設定 → 在庫取得
     useEffect(() => {
-        if (token) {
-            // テスト表示
-            alert('OK!');
+        const found = pickStoredToken();
+        if (found) {
+
             // 以降のAPIにAuthorizationを付与（必要な場合）
             api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        } else {
-            alert('NG!');
-            // 必要ならここでログインへ飛ばすことも可能
-            navigate('/');
         }
         fetchItems();
         // eslint-disable-next-line react-hooks/exhaustive-deps

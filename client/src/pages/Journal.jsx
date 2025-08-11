@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
-
+import useAuthGate from '../hooks/useAuthGate';
 export default function Journal() {
     const navigate = useNavigate();
 
@@ -59,7 +59,7 @@ export default function Journal() {
         setFilters({ from: '', to: '', action: '', item: '', page: 1, pageSize: 20 });
 
     const pageCount = Math.max(1, Math.ceil((data.total || 0) / (data.pageSize || 20)));
-
+    useAuthGate();
     return (
         <div style={{ padding: '2rem' }}>
             {/* 画面ヘッダー行：タイトル＋戻るボタン */}
