@@ -35,7 +35,7 @@ function Zaiko() {
         } else {
             alert('NG!');
             // 必要ならここでログインへ飛ばすことも可能
-            // navigate('/login');
+            navigate('/');
         }
         fetchItems();
         // eslint-disable-next-line react-hooks/exhaustive-deps
