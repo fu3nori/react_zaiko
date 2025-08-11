@@ -56,7 +56,7 @@ Single Sender Verification
 Settings → Sender Authentication → Single Sender Verification  
 送信者の名前/メール/住所など入力 → そのアドレスに確認メール → Verify
 #### env設定
-.env の MAIL_FROM に その検証済みアドレス を設定  
+/server/.env の MAIL_FROM に その検証済みアドレス を設定  
 SENDGRID_API_KEY にsendgrid で取得したAPI KEYを設定 
 
 sendgridの設定を.envに記載する例
