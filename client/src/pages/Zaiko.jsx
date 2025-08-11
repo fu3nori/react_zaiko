@@ -15,6 +15,15 @@ function Zaiko() {
     const goToMaster = () => navigate('/master');
     const goToJournal = () => navigate('/journal');
 
+    const TOKEN_KEYS = ['token', 'access_token', 'jwt', 'accessToken'];
+    const pickStoredToken = () => {
+        for (const k of TOKEN_KEYS) {
+            const v = localStorage.getItem(k) || sessionStorage.getItem(k);
+            if (v) return { key: k, value: v };
+        }
+        return null;
+    };
+
     // 在庫一覧を取得
     const fetchItems = async () => {
         try {
@@ -25,9 +34,13 @@ function Zaiko() {
         }
     };
 
+
+
+
     // 初回マウント時：トークン確認 → アラート → ヘッダ設定 → 在庫取得
     useEffect(() => {
-        if (token) {
+        const found = pickStoredToken();
+        if (found) {
             // テスト表示
             alert('OK!');
             // 以降のAPIにAuthorizationを付与（必要な場合）
