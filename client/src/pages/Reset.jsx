@@ -22,7 +22,7 @@ export default function Reset() {
         if (pw1 !== pw2) return setMsg('確認用パスワードが一致しません。');
         setSubmitting(true);
         try {
-            const { data } = await api.post('/api/password/reset', { token, newPassword: pw1 });
+            const { data } = await api.post('/password/reset', { token, newPassword: pw1 });
             setMsg(data?.message || 'パスワードを更新しました。トップからログインしてください。');
         } catch (e) {
             const err = e?.response?.data?.message || 'トークンが無効または期限切れです。再度リセット依頼を行ってください。';

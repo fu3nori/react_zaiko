@@ -35,7 +35,7 @@ export default function Journal() {
         setLoading(true);
         setErr('');
         try {
-            const res = await api.get('/api/journal', { params: filters });
+            const res = await api.get('/journal', { params: filters });
             setData(res.data);
         } catch (e) {
             setErr(e.message || '取得に失敗しました');
