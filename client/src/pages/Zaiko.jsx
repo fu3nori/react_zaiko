@@ -35,7 +35,22 @@ function Zaiko() {
     };
 
     useAuthGate();
+    // logout
+    const handleLogout = () => {
+        // ストレージ全削除
+        localStorage.removeItem('token');
+        localStorage.removeItem('access_token');
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('access_token');
 
+        // Authorizationヘッダーも消す（axios使ってる場合）
+        delete api.defaults.headers.common['Authorization'];
+
+        // 必要ならサーバー側も通知
+        // await api.post('/auth/logout');
+
+        navigate('/', { replace: true });
+    };
 
     // 初回マウント時：トークン確認 → アラート → ヘッダ設定 → 在庫取得
     useEffect(() => {
@@ -89,7 +104,9 @@ function Zaiko() {
             <div style={{ paddingLeft: 10, margin: 10 }}>
                 <button onClick={goToJournal}>ジャーナル画面へ</button>
             </div>
-
+            <div style={{ paddingLeft: 10, margin: 10 }}>
+                <button onClick={handleLogout}>ログアウト</button>
+            </div>
             <h3 style={{ marginTop: '2rem', borderBottom: '2px solid black' }} className="title">
                 在庫一覧
             </h3>

@@ -101,7 +101,7 @@ function Top() {
 
             <div style={{ clear: 'both' }} />
             <div style={{ marginTop: 8, marginLeft: "40%" }}>
-                <a href="/client/src/pages/Legal"><strong>利用規約（必ずお読みください）</strong></a>
+                <a href="/legal"><strong>利用規約（必ずお読みください）</strong></a>
             </div>
             <div style={{ marginTop: 8, marginLeft: "40%" }}>
                 <a href="/forgot"><strong>パスワードをお忘れですか？</strong></a>

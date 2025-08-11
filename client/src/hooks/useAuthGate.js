@@ -6,9 +6,10 @@ export default function useAuthGate({ alertTest = true } = {}) {
     useEffect(() => {
         const t = getToken();
         if (t) {
-            if (alertTest) alert('OK!');
+            console.log("ログイン成功");
         } else {
             if (alertTest) alert('NG!');
+            window.location.assign('/');
             // ここで必要なら: window.location.assign('/login');
         }
     }, []);
