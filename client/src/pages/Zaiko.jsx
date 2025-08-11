@@ -98,14 +98,12 @@ function Zaiko() {
                 管理したい商品は<strong> 商品マスター登録画面 </strong>で登録してください。
             </p>
 
-            <div style={{ cssFloat: 'left', marginRight: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <button onClick={goToMaster}>商品マスター登録へ</button>
-            </div>
-            <div style={{ paddingLeft: 10, margin: 10 }}>
                 <button onClick={goToJournal}>ジャーナル画面へ</button>
-            </div>
-            <div style={{ cssFloat: 'right', margin: 10 }}>
-                <button onClick={handleLogout}>ログアウト</button>
+                <div style={{ marginLeft: 'auto' }}>
+                    <button onClick={handleLogout}>ログアウト</button>
+                </div>
             </div>
             <h3 style={{ marginTop: '2rem', borderBottom: '2px solid black' }} className="title">
                 在庫一覧
