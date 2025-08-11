@@ -18,7 +18,7 @@ function Top() {
     // ログイン
     const handleLogin = async () => {
         try {
-            const { data } = await api.post('/api/login', {
+            const { data } = await api.post('/login', {
                 email: loginEmail,
                 password: loginPassword,
             });
@@ -38,7 +38,7 @@ function Top() {
     // 新規登録
     const handleRegister = async () => {
         try {
-            const { data } = await api.post('/api/register', {
+            const { data } = await api.post('/register', {
                 email: registerEmail,
                 password: registerPassword,
             });

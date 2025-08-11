@@ -23,7 +23,7 @@ function Zaiko() {
     // 在庫一覧を取得
     const fetchItems = async () => {
         try {
-            const res = await api.get('/api/items');
+            const res = await api.get('/items');
             setItems(res.data.items);
         } catch (err) {
             console.error('在庫取得エラー:', err);
@@ -40,7 +40,7 @@ function Zaiko() {
         if (!quantity || quantity <= 0) return alert('正しい入庫数を入力してください');
 
         try {
-            await api.post('/api/items/in', { item_id: itemId, quantity });
+            await api.post('/items/in', { item_id: itemId, quantity });
             setInQuantities({ ...inQuantities, [itemId]: '' });
             fetchItems();
         } catch (err) {
@@ -55,7 +55,7 @@ function Zaiko() {
         if (quantity > currentStock) return alert('在庫数以上の出庫はできません');
 
         try {
-            await api.post('/api/items/out', { item_id: itemId, quantity });
+            await api.post('/items/out', { item_id: itemId, quantity });
             setOutQuantities({ ...outQuantities, [itemId]: '' });
             fetchItems();
             } catch (err) {

@@ -10,7 +10,7 @@ function Master() {
 
     const handleRegister = async () => {
         try {
-        await api.post('/api/items', {
+        await api.post('/items', {
         name: itemName,
         quantity: Number(initialQuantity) || 0,
         });

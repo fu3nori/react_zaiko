@@ -13,7 +13,7 @@ export default function Forgot() {
         setMsg('');
         setSending(true);
         try {
-            await api.post('/api/password/reset-request', { email });
+            await api.post('/password/reset-request', { email });
             // 存在有無は伏せる仕様（常に成功メッセージ）
             setMsg('もし登録があれば、リセット用メールを送信しました。受信箱をご確認ください。');
         } catch (e) {
