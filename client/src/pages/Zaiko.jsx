@@ -104,7 +104,7 @@ function Zaiko() {
             <div style={{ paddingLeft: 10, margin: 10 }}>
                 <button onClick={goToJournal}>ジャーナル画面へ</button>
             </div>
-            <div style={{ paddingTop: 10, margin: 10 }}>
+            <div style={{ cssFloat: 'right', margin: 10 }}>
                 <button onClick={handleLogout}>ログアウト</button>
             </div>
             <h3 style={{ marginTop: '2rem', borderBottom: '2px solid black' }} className="title">
