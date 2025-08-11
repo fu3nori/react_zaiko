@@ -1,7 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import api from '../lib/api';
-
 import '../styles/Main.css';
 
 function Zaiko() {
@@ -11,14 +10,10 @@ function Zaiko() {
     const [outQuantities, setOutQuantities] = useState({});
 
     const user_id = localStorage.getItem('user_id');
+    const token = localStorage.getItem('token'); // ← トークン取得（キー名は必要に応じて調整）
 
-    const goToMaster = () => {
-        navigate('/master');
-    };
-
-    const goToJournal = () => {
-        navigate('/journal');
-    };
+    const goToMaster = () => navigate('/master');
+    const goToJournal = () => navigate('/journal');
 
     // 在庫一覧を取得
     const fetchItems = async () => {
@@ -30,15 +25,26 @@ function Zaiko() {
         }
     };
 
+    // 初回マウント時：トークン確認 → アラート → ヘッダ設定 → 在庫取得
     useEffect(() => {
+        if (token) {
+            // テスト表示
+            alert('OK!');
+            // 以降のAPIにAuthorizationを付与（必要な場合）
+            api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        } else {
+            alert('NG!');
+            // 必要ならここでログインへ飛ばすことも可能
+            // navigate('/login');
+        }
         fetchItems();
-    }, []);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // マウント時のみ
 
     // 入庫処理
     const handleIn = async (itemId) => {
         const quantity = parseInt(inQuantities[itemId]);
         if (!quantity || quantity <= 0) return alert('正しい入庫数を入力してください');
-
         try {
             await api.post('/items/in', { item_id: itemId, quantity });
             setInQuantities({ ...inQuantities, [itemId]: '' });
@@ -53,34 +59,32 @@ function Zaiko() {
         const quantity = parseInt(outQuantities[itemId]);
         if (!quantity || quantity <= 0) return alert('正しい出庫数を入力してください');
         if (quantity > currentStock) return alert('在庫数以上の出庫はできません');
-
         try {
             await api.post('/items/out', { item_id: itemId, quantity });
             setOutQuantities({ ...outQuantities, [itemId]: '' });
             fetchItems();
-            } catch (err) {
+        } catch (err) {
             console.error('出庫エラー:', err);
-            }
-
+        }
     };
 
     return (
         <div style={{ padding: '2rem' }}>
             <h2 className="title">在庫管理画面</h2>
             <p className="title">
-                管理したい商品は
-                <strong> 商品マスター登録画面 </strong>
-                で登録してください。
+                管理したい商品は<strong> 商品マスター登録画面 </strong>で登録してください。
             </p>
-            <div style={{cssFloat: 'left' , marginRight:10 }}>
-            <button onClick={goToMaster}>商品マスター登録へ</button>
+
+            <div style={{ cssFloat: 'left', marginRight: 10 }}>
+                <button onClick={goToMaster}>商品マスター登録へ</button>
+            </div>
+            <div style={{ paddingLeft: 10, margin: 10 }}>
+                <button onClick={goToJournal}>ジャーナル画面へ</button>
             </div>
 
-
-
-            <div style={{paddingLeft: 10 , margin:10}}><button onClick={goToJournal}>ジャーナル画面へ</button></div>
-
-            <h3 style={{ marginTop: '2rem', borderBottom: '2px solid black' }} className="title">在庫一覧</h3>
+            <h3 style={{ marginTop: '2rem', borderBottom: '2px solid black' }} className="title">
+                在庫一覧
+            </h3>
             <table style={{ borderCollapse: 'collapse', width: '100%' }}>
                 <thead>
                 <tr style={{ borderBottom: '1px solid black' }}>
@@ -101,9 +105,8 @@ function Zaiko() {
                                 value={inQuantities[item.id] || ''}
                                 onChange={(e) => setInQuantities({ ...inQuantities, [item.id]: e.target.value })}
                                 style={{ width: '60px', marginRight: '5px' }}
-
                             />
-                            <button className="button-small" onClick={() => handleIn(item.id)} >入庫</button>
+                            <button className="button-small" onClick={() => handleIn(item.id)}>入庫</button>
                             <br />
                             <label className="title">出庫: </label>
                             <input
@@ -111,9 +114,8 @@ function Zaiko() {
                                 value={outQuantities[item.id] || ''}
                                 onChange={(e) => setOutQuantities({ ...outQuantities, [item.id]: e.target.value })}
                                 style={{ width: '60px', marginRight: '5px' }}
-
                             />
-                            <button className="button-small" onClick={() => handleOut(item.id, item.quantity)} >出庫</button>
+                            <button className="button-small" onClick={() => handleOut(item.id, item.quantity)}>出庫</button>
                         </td>
                     </tr>
                 ))}
