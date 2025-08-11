@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import api from '../lib/api';
 import '../styles/Main.css';
-
+import useAuthGate from '../hooks/useAuthGate';
 function Zaiko() {
     const navigate = useNavigate();
     const [items, setItems] = useState([]);
@@ -34,21 +34,16 @@ function Zaiko() {
         }
     };
 
-
+    useAuthGate();
 
 
     // 初回マウント時：トークン確認 → アラート → ヘッダ設定 → 在庫取得
     useEffect(() => {
         const found = pickStoredToken();
         if (found) {
-            // テスト表示
-            alert('OK!');
+
             // 以降のAPIにAuthorizationを付与（必要な場合）
             api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        } else {
-            alert('NG!');
-            // 必要ならここでログインへ飛ばすことも可能
-            // navigate('/login');
         }
         fetchItems();
         // eslint-disable-next-line react-hooks/exhaustive-deps

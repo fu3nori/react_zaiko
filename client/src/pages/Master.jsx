@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/Main.css';
 import api from '../lib/api';
-
+import useAuthGate from '../hooks/useAuthGate';
 function Master() {
     const navigate = useNavigate();
     const [itemName, setItemName] = useState('');
@@ -22,7 +22,7 @@ function Master() {
     }
 
     };
-
+    useAuthGate();
     return (
         <div style={{ padding: '2rem' }}>
             <h2 className="title">商品マスター登録画面</h2>
